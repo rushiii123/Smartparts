@@ -11,7 +11,7 @@ import { SearchProvider } from "./context/SearchContext";
 
 // Pages
 import HomePage from "./pages/HomePage";
-import SearchResults from "./pages/SearchResults";
+import SearchResults from "./components/search/SearchResults"; // Updated import path
 import OrderRequest from "./pages/OrderRequestPage";
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import AdminPanel from "./pages/AdminPanel";
@@ -46,7 +46,7 @@ function App() {
 
                 {/* Public Routes */}
                 <Route path="/" element={<HomePage />} />
-                <Route path="/search" element={<SearchResults />} />
+                <Route path="/search-results" element={<SearchResults />} />
                 <Route path="/order" element={<OrderRequest />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />

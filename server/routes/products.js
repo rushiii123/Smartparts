@@ -7,9 +7,6 @@ import Product from '../models/Product.js';
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const pageSize = 10; // How many products per page
-    const page = Number(req.query.pageNumber) || 1;
-
     const keyword = req.query.keyword
       ? {
           $or: [
@@ -20,20 +17,58 @@ router.get('/', async (req, res) => {
         }
       : {};
 
-    const count = await Product.countDocuments({ ...keyword });
-    const products = await Product.find({ ...keyword })
-      .limit(pageSize)
-      .skip(pageSize * (page - 1));
+    const products = await Product.find({ ...keyword });
 
-    res.json({
-      products,
-      page,
-      pages: Math.ceil(count / pageSize),
-    });
+    res.json({ products }); // Return just the product list
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
+
+// @desc    Create a new product
+// @route   POST /api/products
+// @access  Private (vendor only)
+router.post('/', async (req, res) => {
+  try {
+    const {
+      name,
+      partNumber,
+      price,
+      category,
+      condition,
+      quantity,
+      vendorId,
+      image,
+      images,
+      tags
+    } = req.body;
+
+    if (!name || !price || !category || !condition || !vendorId) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const product = new Product({
+      name,
+      partNumber: partNumber || '',
+      price,
+      category,
+      condition,
+      quantity: quantity || 0,
+      vendorId,
+      image: image || '',
+      images: images || [],
+      tags: tags || [],
+    });
+
+    const createdProduct = await product.save();
+    res.status(201).json(createdProduct);
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 
 export default router;

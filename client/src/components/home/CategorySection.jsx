@@ -74,10 +74,8 @@ export default function CategorySection() {
               <category.icon className="mx-auto text-4xl mb-4" />
               <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
               <p className="text-sm text-gray-600 mb-4">{category.description}</p>
-              <Link 
-                to={`/search-results?category=${category.id}`}
-                className="text-blue-600 inline-flex items-center"
-              >
+              <Link to={`/search-results?category=${category.id}`}>
+
                 See products <ArrowRight className="ml-2" />
               </Link>
             </div>
