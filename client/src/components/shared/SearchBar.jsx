@@ -90,7 +90,7 @@ export default function SearchBar({
     e.preventDefault();
     if (inputValue.trim()) {
       setSearchTerm(inputValue);
-      navigate('/search');
+      navigate(`/search-keyword?keyword=${encodeURIComponent(inputValue)}`);
     }
   };
 
@@ -113,7 +113,7 @@ export default function SearchBar({
             value={inputValue}
             onChange={handleInputChange}
             placeholder={placeholder}
-            className={`w-full pl-10 pr-10 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${variantClasses[variant]}`}
+            className={`w-full pl-10 pr-10 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${variantClasses[variant]}`}
             onFocus={() => inputValue && setShowAutocomplete(autocompleteItems.length > 0)}
           />
           
@@ -141,8 +141,8 @@ export default function SearchBar({
       {showAutocomplete && (
         <div 
           ref={autocompleteRef} 
-          className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
-        >
+          className="absolute z-10 w-full mt-1 bg-white text-black border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          >
           <ul>
             {autocompleteItems.map((item, index) => (
               <li 

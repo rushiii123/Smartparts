@@ -6,10 +6,7 @@ import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-// Route for image search via URL
-router.post('/by-image-url', protect, recognizeImage);
-
-// Route for image search via file upload
-router.post('/by-image-upload', protect, upload.single('image'), recognizeImage);
+router.post('/analyze-url', recognizeImage);
+router.post('/analyze-upload', upload.single('image'), recognizeImage);
 
 export default router;

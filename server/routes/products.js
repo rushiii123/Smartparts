@@ -2,30 +2,28 @@ import express from 'express';
 const router = express.Router();
 import Product from '../models/Product.js';
 
-// @desc    Fetch all products with search and pagination
+// @desc    Fetch all products with search capability
 // @route   GET /api/products
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const keyword = req.query.keyword
+    const keyword = req.query.search
       ? {
           $or: [
-            { name: { $regex: req.query.keyword, $options: 'i' } },
-            { brand: { $regex: req.query.keyword, $options: 'i' } },
-            { description: { $regex: req.query.keyword, $options: 'i' } },
+            { name: { $regex: req.query.search, $options: 'i' } },
+            { brand: { $regex: req.query.search, $options: 'i' } },
+            { description: { $regex: req.query.search, $options: 'i' } },
           ],
         }
       : {};
 
     const products = await Product.find({ ...keyword });
-
-    res.json({ products }); // Return just the product list
+    res.json({ products });
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
-
 
 // @desc    Create a new product
 // @route   POST /api/products
@@ -69,6 +67,5 @@ router.post('/', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
-
 
 export default router;

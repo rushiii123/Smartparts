@@ -1,60 +1,52 @@
 import { ImageAnnotatorClient } from '@google-cloud/vision';
 import fs from 'fs';
 
-// Creates a client
+// Vision client setup
 const client = new ImageAnnotatorClient({
-  // If you're using a key file:
-  keyFilename: './config/smartparts-458017-c7d57b813224.json'
-  // Or if using environment variables, it will use GOOGLE_APPLICATION_CREDENTIALS
+  keyFilename: './config/smartparts-vision-cb24444eff3a.json',
 });
 
-export const analyzeImage = async (imageSource) => {
+export const analyzeImageAndExtractKeywords = async (imageSource) => {
   try {
-    let request;
-    
-    // Check if the image source is a URL or a local path
-    if (imageSource.startsWith('http://') || imageSource.startsWith('https://')) {
-      // It's a URL
-      request = {
-        image: { source: { imageUri: imageSource } },
-      };
-    } else {
-      // It's a local file or Cloudinary URL
-      if (imageSource.includes('cloudinary.com')) {
-        request = {
-          image: { source: { imageUri: imageSource } },
-        };
-      } else {
-        // It's a local file
-        const imageContent = fs.readFileSync(imageSource);
-        request = {
-          image: { content: imageContent.toString('base64') },
-        };
-      }
-    }
-    
-    // Performs label detection
-    const [labelResult] = await client.labelDetection(request);
-    const labels = labelResult.labelAnnotations || [];
-    
-    // Text detection
-    const [textResult] = await client.textDetection(request);
-    const detectedText = textResult?.textAnnotations?.[0]?.description || '';
-    
-    // Object localization
-    const [objectResult] = await client.objectLocalization(request);
-    const objects = objectResult?.localizedObjectAnnotations || [];
-    
+    const image = imageSource.startsWith('http')
+      ? { source: { imageUri: imageSource } }
+      : { content: fs.readFileSync(imageSource).toString('base64') };
+
+    const [result] = await client.annotateImage({
+      image,
+      features: [
+        { type: 'LABEL_DETECTION' },
+        { type: 'TEXT_DETECTION' },
+        { type: 'OBJECT_LOCALIZATION' },
+      ],
+    });
+
+    const labels = result.labelAnnotations || [];
+    const text = result.textAnnotations?.[0]?.description || '';
+    const objects = result.localizedObjectAnnotations || [];
+
+    // 🧠 Extract raw keyword phrases
+    const labelPhrases = labels.map(l => l.description.toLowerCase());
+    const objectPhrases = objects.map(o => o.name.toLowerCase());
+    const textWords = text.toLowerCase().split(/\s+/);
+
+    // 🔁 Explode compound phrases into single keywords
+    const exploded = [
+      ...labelPhrases.flatMap(p => p.split(/\s+/)),
+      ...objectPhrases.flatMap(p => p.split(/\s+/)),
+      ...textWords
+    ].filter(Boolean);
+
+    // 🚫 Remove duplicates
+    const uniqueKeywords = [...new Set(exploded)];
+
     return {
-      labels: labels.map(label => ({ 
-        description: label.description, 
-        score: label.score 
-      })),
-      text: detectedText,
-      objects: objects.map(object => ({
-        name: object.name,
-        score: object.score
-      }))
+      keywords: uniqueKeywords,
+      raw: {
+        labels,
+        text,
+        objects,
+      },
     };
   } catch (error) {
     console.error('Vision API Error:', error);

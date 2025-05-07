@@ -36,13 +36,13 @@ export default function Hero() {
           const formData = new FormData();
           formData.append('image', searchImage);
           
-          response = await fetch('http://localhost:5000/api/recognize/analyze-upload', {
+          response = await fetch('http://localhost:5000/api/search/analyze-upload', {
             method: 'POST',
             body: formData,
           });
         } else if (uploadMethod === 'url' && imageUrl) {
           // Handle image URL
-          response = await fetch('http://localhost:5000/api/recognize/analyze-url', {
+          response = await fetch('http://localhost:5000/api/search/analyze-url', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

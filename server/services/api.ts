@@ -55,7 +55,7 @@ export const products = {
     return response.data;
   },
   search: async (query: string) => {
-    const response = await api.get(`/products/search/${query}`);
+    const response = await api.get(`/products?search=${encodeURIComponent(query)}`);
     return response.data;
   },
 };

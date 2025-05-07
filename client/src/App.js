@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 
 // Layout Components
 import Header from "./components/layout/Header"; 
@@ -27,10 +27,13 @@ import VendorListingsPage from "./pages/vendor/ListingsPage";
 import VendorAddProductPage from "./pages/vendor/AddProductPage";
 import VendorRequestsPage from "./pages/vendor/RequestsPage";
 import VendorSettingsPage from "./pages/vendor/SettingsPage";
+import ImageSearchResults from "./components/ImageSearchResults"; // Updated import path
+import TextSearchResults from './components/TextSearchResults';
+
 
 // New Component for Image Upload
 import ImageUploadForm from './components/ImageUploadForm';
-
+import Profile from "./components/dashboard/Profile";
 // New: ProtectedRoute
 import ProtectedRoute from "./components/ProtectedRoute"; 
 
@@ -47,6 +50,8 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/" element={<HomePage />} />
                 <Route path="/search-results" element={<SearchResults />} />
+                <Route path="/search" element={<ImageSearchResults />} />
+                <Route path="/search-keyword" element={<TextSearchResults />} />
                 <Route path="/order" element={<OrderRequest />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -57,6 +62,7 @@ function App() {
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/upload-image" element={<ImageUploadForm />} />
+                <Route path="/CustomerDashboard" element={<Profile />} />
 
                 {/* Admin Panel */}
                 <Route path="/admin" element={<AdminPanel />} />
