@@ -63,6 +63,7 @@ function App() {
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/upload-image" element={<ImageUploadForm />} />
                 <Route path="/CustomerDashboard" element={<Profile />} />
+                <Route path="/vendor/dashboard" element={<VendorDashboard />} />
 
                 {/* Admin Panel */}
                 <Route path="/admin" element={<AdminPanel />} />

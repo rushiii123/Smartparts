@@ -2,7 +2,6 @@ import { analyzeImageAndExtractKeywords } from '../config/vision.js';
 import Product from '../models/Product.js';
 
 export const recognizeImage = async (req, res) => {
-
   try {
     const imageUrl = req.file?.path || req.body.imageUrl;
 
@@ -13,20 +12,23 @@ export const recognizeImage = async (req, res) => {
       });
     }
 
+    // Extract keywords using Vision API
     const { keywords, raw } = await analyzeImageAndExtractKeywords(imageUrl);
     console.log('Extracted keywords:', keywords);
 
-    const matchingProducts = await Product.find({
-      $or: [
-        // { name: { $regex: new RegExp(keywords.join('|'), 'i') } },
-        // { description: { $regex: new RegExp(keywords.join('|'), 'i') } },
-        // { category: { $regex: new RegExp(keywords.join('|'), 'i') } },
-        // { partNumber: { $in: keywords.map(kw => new RegExp(kw, 'i')) } },
-        { tags: { $in: keywords.map(kw => new RegExp(kw, 'i')) } } 
+    // Fetch all products (for custom filtering)
+    const allProducts = await Product.find();
 
-      ]
-    }).limit(20);
+    // Filter products: at least 2 matching tags
+    const matchingProducts = allProducts.filter((product) => {
+      const matchCount = product.tags.filter(tag =>
+        keywords.some(kw => new RegExp(kw, 'i').test(tag))
+      ).length;
 
+      return matchCount >= 2;
+    });
+
+    // Send response
     res.status(200).json({
       success: true,
       keywords,

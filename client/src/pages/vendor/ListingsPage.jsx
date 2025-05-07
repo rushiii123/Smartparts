@@ -1,43 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2, Search, Plus } from 'lucide-react';
 import Button from '../../components/shared/Button';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Alternator - Toyota Camry 2012-2015',
-    partNumber: 'ALT-4589-TC',
-    price: 129.99,
-    category: 'Automotive',
-    condition: 'New',
-    inStock: true,
-    image: 'https://images.pexels.com/photos/162553/keys-workshop-mechanic-tools-162553.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    views: 245,
-    requests: 12,
-  },
-  {
-    id: '2',
-    name: 'Brake Pads - Honda Civic 2016-2020',
-    partNumber: 'BP-2347-HC',
-    price: 54.99,
-    category: 'Automotive',
-    condition: 'New',
-    inStock: true,
-    image: 'https://images.pexels.com/photos/6517323/pexels-photo-6517323.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    views: 189,
-    requests: 8,
-  },
-];
 
 export default function VendorListingsPage() {
+  const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCondition, setSelectedCondition] = useState('all');
 
-  const filteredProducts = mockProducts.filter(product => {
+  const token = localStorage.getItem('token');
+  console.log(token); // should give you the token
+  const decoded = token ? jwtDecode(token) : null;
+  const vendorId = decoded?.userId;
+  console.log('Vendor ID:', vendorId);
+
+  useEffect(() => {
+    async function fetchVendorProducts() {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/products/vendor/${vendorId}`);
+        const enriched = res.data.products.map(p => ({
+          ...p,
+          views: 245, // Temporary mock
+          requests: 12, // Temporary mock
+          inStock: p.quantity > 0,
+        }));
+        setProducts(enriched);
+      } catch (err) {
+        console.error('Failed to fetch vendor products', err);
+      }
+    }
+
+    fetchVendorProducts();
+  }, [vendorId]);
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.partNumber.toLowerCase().includes(searchTerm.toLowerCase());
+                          product.partNumber?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesCondition = selectedCondition === 'all' || product.condition === selectedCondition;
     return matchesSearch && matchesCategory && matchesCondition;
@@ -109,7 +111,7 @@ export default function VendorListingsPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredProducts.map((product) => (
-                <tr key={product.id}>
+                <tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <img className="h-10 w-10 rounded-md object-cover" src={product.image} alt={product.name} />
@@ -119,11 +121,11 @@ export default function VendorListingsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{product.partNumber}</div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {product.partNumber || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    Rs. {Number(product.price).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -133,12 +135,8 @@ export default function VendorListingsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {product.views} views
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {product.requests} requests
-                    </div>
+                    <div className="text-sm text-gray-900">{product.views} views</div>
+                    <div className="text-sm text-gray-500">{product.requests} requests</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button className="text-blue-600 hover:text-blue-900 mr-3">

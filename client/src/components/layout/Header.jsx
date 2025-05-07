@@ -78,7 +78,7 @@ export default function Header() {
               {isAuthenticated ? (
                 <>
                   {role === 'vendor' && (
-                    <Link to="/vendor/VendorDashboard" className="font-semibold text-white hover:text-blue-200 transition-colors">
+                    <Link to="/vendor/dashboard" className="font-semibold text-white hover:text-blue-200 transition-colors">
                       Dashboard
                     </Link>
                   )}
