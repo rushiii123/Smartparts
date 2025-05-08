@@ -28,7 +28,9 @@ export default function LoginPage() {
       setTimeout(() => {
         if (user.role === 'vendor') {
           navigate('/vendor/dashboard');
-        } else {
+        } else if (user.role === 'customer') {
+          navigate('/customer/dashboard');
+        }else {
           navigate('/');
         }
       }, 1500);

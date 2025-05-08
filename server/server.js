@@ -12,6 +12,8 @@ import imageSearchRoutes from './routes/imageSearch.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import recognizeRoutes from './routes/recognizeRoutes.js';
 import matchRoutes from './routes/matchRoutes.js';
+import vendorRoutes from './routes/vendors.js'; 
+import customerRoutes from './routes/customers.js';
 
 // Load environment variables
 dotenv.config();
@@ -48,11 +50,13 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/vendor', vendorRoutes); 
 app.use('/api/orders', orderRoutes);
 app.use('/api/search', imageSearchRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/recognize', recognizeRoutes);
 app.use('/api/match', matchRoutes);
+app.use('/api/customer', customerRoutes); 
 
 // Error handling middleware
 app.use((err, req, res, next) => {

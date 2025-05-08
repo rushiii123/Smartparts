@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Car, Cpu, PenTool as Tool, Wrench, Atom, Cog, Truck, ArrowRight } from 'lucide-react';
+import { Car, Cpu, PenTool as Tool, Wrench, Atom, Cog, Truck, ArrowRight,Boxes } from 'lucide-react';
 
 const categories = [
   {
@@ -49,6 +49,13 @@ const categories = [
     name: 'Commercial',
     icon: Truck,
     description: 'Commercial equipment parts',
+    color: 'bg-orange-100 text-orange-700',
+  },
+  {
+    id: 'All Products',
+    name: 'All Products',
+    icon: Boxes,
+    description: 'All vehicle parts',
     color: 'bg-orange-100 text-orange-700',
   }
 ];

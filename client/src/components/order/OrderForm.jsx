@@ -1,203 +1,219 @@
-import { useState } from 'react';
-import { Calendar, Clock, MapPin, Phone, Mail, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Calendar, Clock, LoaderCircle } from 'lucide-react';
 import Button from '../shared/Button';
-import { Product } from '../search/ProductCard';
+import { jwtDecode } from 'jwt-decode';
 
-function OrderForm({ product, onSubmit }) {
+export default function OrderForm({ onSubmit }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [product, setProduct] = useState(null);
+  const [vendor, setVendor] = useState(null); // To store vendor data
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    quantity: 1,
     pickupDate: '',
     pickupTime: '',
-    notes: '',
+    notes: ''
   });
+  const [loading, setLoading] = useState(false);
 
-  const [errors, setErrors] = useState({});
+  // This effect will handle token validation and redirection
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('You need to be logged in!');
+      navigate('/login');  // Redirect to login page
+      return;
+    }
+
+    const fetchProduct = async () => {
+      try {
+        // Fetch the product data
+        const productRes = await fetch(`http://localhost:5000/api/products/${id}`);
+        const productData = await productRes.json();
+        setProduct(productData.product); // Assuming the product data is in `product`
+
+        // After getting product, fetch the vendor details using vendorId
+        const vendorRes = await fetch(`http://localhost:5000/api/vendor/${productData.product.vendorId}`);
+        const vendorData = await vendorRes.json();
+        setVendor(vendorData.vendor); // Set vendor data
+
+      } catch (err) {
+        console.error("Error fetching product or vendor:", err);
+      }
+    };
+
+    fetchProduct();
+  }, [id, navigate]); // Only fetch the product if `id` changes
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-
-    // Clear error when field is updated
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined
-      }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    let isValid = true;
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-      isValid = false;
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-      isValid = false;
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone is required';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSubmit(formData);
+    // Check if the quantity is greater than 0 and less than or equal to the available stock
+    if (formData.quantity <= 0) {
+      alert("Quantity cannot be zero or negative. Please enter a valid quantity.");
+      return; // Prevent form submission
     }
-  };
 
-  // Generate time options every 30 minutes from 9 AM to 6 PM
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let hour = 9; hour <= 18; hour++) {
-      const hourStr = hour > 12 ? `${hour - 12}` : `${hour}`;
-      const period = hour >= 12 ? 'PM' : 'AM';
+    if (formData.quantity > product.quantity) {
+      alert(`The quantity you entered exceeds the available stock (${product.quantity}). Please reduce the quantity.`);
+      return; // Prevent form submission
+    }
 
-      options.push(`${hourStr}:00 ${period}`);
-      if (hour < 18) {
-        options.push(`${hourStr}:30 ${period}`);
+    // Validate pickup date and time
+    if (!formData.pickupDate) {
+      alert("Please select a pickup date.");
+      return; // Prevent form submission
+    }
+
+    if (!formData.pickupTime) {
+      alert("Please select a pickup time.");
+      return; // Prevent form submission
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) return alert('Please login to place an order.');
+
+    let customerId;
+    try {
+      const decoded = jwtDecode(token);
+      customerId = decoded?.userId || decoded?._id;
+    } catch (err) {
+      return alert('Invalid token.');
+    }
+
+    const orderPayload = {
+      customerId,
+      vendorId: product.vendorId,
+      productId: product._id || product.id,
+      quantity: parseInt(formData.quantity),
+      pickupDate: formData.pickupDate,
+      pickupTime: formData.pickupTime,
+      notes: formData.notes
+    };
+
+    try {
+      setLoading(true);
+
+      console.log('Order Payload:', orderPayload); // Debugging line
+      
+      const res = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Send the token in the Authorization header
+        },
+        body: JSON.stringify(orderPayload)
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (res.ok) {
+        // Navigate to order history page upon successful order placement
+        navigate('/order/history');
+      } else {
+        alert(data.message || 'Order failed');
       }
+    } catch (err) {
+      setLoading(false);
+      console.error(err);
+      alert('Something went wrong');
     }
-    return options;
   };
 
-  // Get tomorrow's date in YYYY-MM-DD format
+  const generateTimeOptions = () => {
+    const slots = [];
+    for (let hour = 9; hour <= 18; hour++) {
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const baseHour = hour > 12 ? hour - 12 : hour;
+      slots.push(`${baseHour}:00 ${period}`, `${baseHour}:30 ${period}`);
+    }
+    return slots;
+  };
+
   const getTomorrowDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date.toISOString().split('T')[0];
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="name" className="block text-gray-700 font-medium mb-1">
-          Full Name*
-        </label>
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <User size={18} />
+    <div className="max-w-4xl mx-auto space-y-6 p-6 mt-20">
+      {product ? (
+        <>
+          {/* Product Information Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-medium text-gray-800 mb-4">Product Information</h3>
+            <p><strong>Product: </strong>{product.name}</p>
+            <p><strong>Price: </strong>{product.price ? `Rs. ${product.price}` : 'Price not available'}</p>
           </div>
+
+          {/* Vendor Information Section */}
+          {vendor && (
+            <div className="bg-white p-6 rounded-lg shadow-md mt-6">
+              <h3 className="text-xl font-medium text-gray-800 mb-4">Vendor Information</h3>
+              <p><strong>Store Name: </strong>{vendor.storeName}</p>
+              <p><strong>Store Address: </strong>{vendor.address}</p>
+              <p><strong>Contact: </strong>{vendor.contact}</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <div>Loading product...</div>
+      )}
+
+      {/* Order Form Section */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Quantity*</label>
           <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
+            type="number"
+            name="quantity"
+            value={formData.quantity}
             onChange={handleChange}
-            className={`w-full p-3 pl-10 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.name ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="John Smith"
+            min={1}
+            required
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-      </div>
 
-      <div>
-        <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
-          Email Address*
-        </label>
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <Mail size={18} />
-          </div>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={`w-full p-3 pl-10 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="email@example.com"
-          />
-        </div>
-        {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
-      </div>
-
-      <div>
-        <label htmlFor="phone" className="block text-gray-700 font-medium mb-1">
-          Phone Number*
-        </label>
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <Phone size={18} />
-          </div>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className={`w-full p-3 pl-10 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.phone ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="(555) 123-4567"
-          />
-        </div>
-        {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
-      </div>
-
-      <div className="border-t border-gray-200 pt-4">
-        <h3 className="text-lg font-medium text-gray-800 mb-3">Pickup Details (Optional)</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white p-6 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Pickup Date Section */}
           <div>
-            <label htmlFor="pickupDate" className="block text-gray-700 font-medium mb-1">
-              Preferred Pickup Date
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date</label>
             <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Calendar size={18} />
-              </div>
+              <Calendar size={18} className="absolute left-3 top-3 text-gray-400" />
               <input
                 type="date"
-                id="pickupDate"
                 name="pickupDate"
                 value={formData.pickupDate}
                 onChange={handleChange}
                 min={getTomorrowDate()}
-                className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 pl-10 border border-gray-300 rounded-md"
               />
             </div>
           </div>
 
+          {/* Pickup Time Section */}
           <div>
-            <label htmlFor="pickupTime" className="block text-gray-700 font-medium mb-1">
-              Preferred Pickup Time
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time</label>
             <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Clock size={18} />
-              </div>
+              <Clock size={18} className="absolute left-3 top-3 text-gray-400" />
               <select
-                id="pickupTime"
                 name="pickupTime"
                 value={formData.pickupTime}
                 onChange={handleChange}
-                className="w-full p-3 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                className="w-full p-3 pl-10 border border-gray-300 rounded-md"
               >
-                <option value="">Select a time</option>
+                <option value="">Select time</option>
                 {generateTimeOptions().map((time) => (
                   <option key={time} value={time}>
                     {time}
@@ -207,42 +223,32 @@ function OrderForm({ product, onSubmit }) {
             </div>
           </div>
         </div>
-      </div>
 
-      <div>
-        <label htmlFor="notes" className="block text-gray-700 font-medium mb-1">
-          Additional Notes
-        </label>
-        <textarea
-          id="notes"
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          rows={3}
-          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Any special instructions or questions..."
-        />
-      </div>
-
-      <div className="border-t border-gray-200 pt-4">
-        <div className="flex items-start mb-4">
-          <h3 className="text-lg font-medium text-gray-800">Pickup Location:</h3>
-          <div className="ml-2 flex items-start">
-            <MapPin size={18} className="text-gray-400 mt-1 flex-shrink-0" />
-            <span className="ml-1 text-gray-700">{product.vendor.location}</span>
-          </div>
+        {/* Additional Notes Section */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+          <textarea
+            name="notes"
+            rows={3}
+            value={formData.notes}
+            onChange={handleChange}
+            placeholder="Any special instructions..."
+            className="w-full p-3 border border-gray-300 rounded-md"
+          />
         </div>
 
-        <Button type="submit" variant="primary" size="lg" fullWidth>
-          Submit Order Request
+        {/* Submit Button */}
+        <Button type="submit" variant="primary" size="lg" fullWidth disabled={loading}>
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <LoaderCircle className="animate-spin mr-2" size={18} />
+              Submitting...
+            </span>
+          ) : (
+            'Submit Order Request'
+          )}
         </Button>
-
-        <p className="mt-3 text-sm text-gray-600 text-center">
-          By submitting, you'll receive a confirmation email with the next steps
-        </p>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
-
-export default OrderForm;

@@ -100,9 +100,8 @@ export default function ProductCard({ product }) {
           </div>
 
           <div
-            className={`flex items-center text-sm text-gray-600 mt-1 transition-opacity duration-300 ${
-              isHovering ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`flex items-center text-sm text-gray-600 mt-1 transition-opacity duration-300 ${isHovering ? 'opacity-100' : 'opacity-0'
+              }`}
           >
             <Phone size={14} className="mr-1" />
             <span>{vendor.phone}</span>
@@ -110,14 +109,16 @@ export default function ProductCard({ product }) {
         </div>
 
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            icon={<ExternalLink size={16} />}
-            className="flex-1"
-          >
-            View Details
-          </Button>
+          <Link to={`/product/${product._id || product.id}`} className="flex-1">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<ExternalLink size={16} />}
+              fullWidth
+            >
+              View Details
+            </Button>
+          </Link>
 
           <Link to={`/order-request/${product._id || product.id}`} className="flex-1">
             <Button
@@ -130,6 +131,7 @@ export default function ProductCard({ product }) {
             </Button>
           </Link>
         </div>
+
       </div>
     </div>
   );

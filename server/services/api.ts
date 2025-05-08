@@ -91,3 +91,57 @@ export const imageSearch = {
     return response.data;
   },
 };
+
+
+export const vendors = {
+  // Fetch vendor details by vendorId
+  getById: async (vendorId: string) => {
+    const response = await api.get(`/vendors/${vendorId}`);
+    return response.data;
+  },
+
+  // Create a new vendor
+  create: async (vendorData: any) => {
+    const response = await api.post('/vendors', vendorData);
+    return response.data;
+  },
+
+  // Update vendor details
+  update: async (vendorId: string, vendorData: any) => {
+    const response = await api.put(`/vendors/${vendorId}`, vendorData);
+    return response.data;
+  },
+
+  // Delete a vendor
+  delete: async (vendorId: string) => {
+    const response = await api.delete(`/vendors/${vendorId}`);
+    return response.data;
+  },
+};
+
+
+// export const customers = {
+//   // Fetch customer details by customerId
+//   getById: async (customerId: string) => {
+//     const response = await api.get(`/customers/${customerId}`);
+//     return response.data;
+//   },
+
+//   // Create a new customer
+//   create: async (customerData: any) => {
+//     const response = await api.post('/customers', customerData);
+//     return response.data;
+//   },
+
+//   // Update customer details
+//   update: async (customerId: string, customerData: any) => {
+//     const response = await api.put(`/customers/${customerId}`, customerData);
+//     return response.data;
+//   },
+
+//   // Delete a customer
+//   delete: async (customerId: string) => {
+//     const response = await api.delete(`/customers/${customerId}`);
+//     return response.data;
+//   },
+// };

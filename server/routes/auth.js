@@ -1,20 +1,21 @@
+// routes/auth.js
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import { protect } from '../middleware/auth.js'; // Corrected this line
+import Customer from '../models/Customer.js';
+import Vendor from '../models/Vendor.js';
 
 const router = express.Router();
 
-// Register user
+// Register Route for Customer and Vendor
 router.post(
   '/register',
   [
     body('email').isEmail(),
     body('password').isLength({ min: 6 }),
     body('fullName').notEmpty(),
-    body('role').isIn(['user', 'vendor']),
+    body('role').isIn(['customer', 'vendor']),
   ],
   async (req, res) => {
     try {
@@ -23,21 +24,42 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { email, password, fullName, role } = req.body;
+      const { email, password, fullName, role, address, storeName, contact } = req.body;
 
-      let user = await User.findOne({ email });
+      let user;
+      if (role === 'customer') {
+        user = await Customer.findOne({ email });
+      } else if (role === 'vendor') {
+        user = await Vendor.findOne({ email });
+      }
+
       if (user) {
         return res.status(400).json({ message: 'User already exists' });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      user = new User({
-        email,
-        password: hashedPassword,
-        fullName,
-        role,
-      });
+      if (role === 'customer') {
+        user = new Customer({
+          email,
+          password: hashedPassword,
+          name: fullName,  // Using name as fullName for Customer
+          address,
+          role,      // Set the role here as vendor
+
+        });
+      } else if (role === 'vendor') {
+        user = new Vendor({
+          name: fullName,
+          email,
+          password: hashedPassword,
+          storeName, // storeName for Vendor
+          contact,   // contact for Vendor
+          address,   // address for Vendor
+          role,      // Set the role here as vendor
+
+        });
+      }
 
       await user.save();
 
@@ -47,7 +69,17 @@ router.post(
         { expiresIn: '7d' }
       );
 
-      res.json({ token, user: { id: user._id, email, fullName, role } });
+      res.json({
+        token,
+        user: {
+          id: user._id,
+          email,
+          fullName: user.name,
+          role,
+          ...(role === 'vendor' && { storeName: user.storeName, contact: user.contact, address: user.address }),
+          ...(role === 'customer' && { address: user.address }),
+        },
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Server error' });
@@ -55,7 +87,7 @@ router.post(
   }
 );
 
-// Login user
+// Login Route for Customer and Vendor
 router.post(
   '/login',
   [
@@ -71,7 +103,14 @@ router.post(
 
       const { email, password } = req.body;
 
-      const user = await User.findOne({ email });
+      let user;
+      // Check for customer first
+      user = await Customer.findOne({ email });
+      if (!user) {
+        // Then check for vendor
+        user = await Vendor.findOne({ email });
+      }
+
       if (!user) {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
@@ -94,6 +133,8 @@ router.post(
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          ...(user.role === 'vendor' && { storeName: user.storeName, contact: user.contact, address: user.address }),
+          ...(user.role === 'customer' && { address: user.address }),
         },
       });
     } catch (err) {
@@ -103,52 +144,5 @@ router.post(
   }
 );
 
-// Get current user (Profile)
-router.get('/me', protect, async (req, res) => { // used protect
-  try {
-    const user = await User.findById(req.user.userId).select('-password');
-    res.json(user);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Update current user's profile
-router.put(
-  '/profile',
-  [
-    protect, // used protect
-    [
-      body('fullName').notEmpty().withMessage('Full name is required'),
-      body('email').isEmail().withMessage('A valid email is required'),
-    ],
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { fullName, email } = req.body;
-
-      const user = await User.findById(req.user.userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      user.fullName = fullName || user.fullName;
-      user.email = email || user.email;
-
-      await user.save();
-
-      res.json({ message: 'Profile updated successfully', user });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Server error' });
-    }
-  }
-);
 
 export default router;

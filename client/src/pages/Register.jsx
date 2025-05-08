@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle } from 'lucide-react';  // Added CheckCircle
 import Button from '../components/shared/Button';
-import { registerUser } from '../lib/auth';
+import { registerUser } from '../lib/auth';  // Assuming you have an auth file for handling registration
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('user');
+  const [address, setAddress] = useState('');
+  const [storeName, setStoreName] = useState('');
+  const [contact, setContact] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,12 +24,27 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { user, token } = await registerUser(email, password, fullName, role);
+      // Prepare the registration data based on role
+      const userData = {
+        email,
+        password,
+        fullName,
+        role,
+        address,
+      };
+
+      if (role === 'vendor') {
+        // Add vendor specific fields
+        userData.storeName = storeName;
+        userData.contact = contact;
+      }
+
+      const { user, token } = await registerUser(userData);  
       localStorage.setItem('token', token);
       setSuccess('Successfully registered!');
       setTimeout(() => {
         if (user.role === 'vendor') {
-          navigate('/vendor/VendorDashboard');
+          navigate('/vendor/dashboard'); 
         } else {
           navigate('/');
         }
@@ -123,9 +141,58 @@ export default function RegisterPage() {
                 onChange={(e) => setRole(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="user">Customer</option>
+                <option value="customer">Customer</option>
                 <option value="vendor">Vendor</option>
               </select>
+            </div>
+
+            {role === 'vendor' && (
+              <>
+                <div>
+                  <label htmlFor="storeName" className="block text-sm font-medium text-gray-700">
+                    Store Name
+                  </label>
+                  <input
+                    id="storeName"
+                    name="storeName"
+                    type="text"
+                    required
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="contact" className="block text-sm font-medium text-gray-700">
+                    Contact
+                  </label>
+                  <input
+                    id="contact"
+                    name="contact"
+                    type="text"
+                    required
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                Address
+              </label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                required
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
 
             <div>

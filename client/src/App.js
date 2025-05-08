@@ -12,13 +12,11 @@ import { SearchProvider } from "./context/SearchContext";
 // Pages
 import HomePage from "./pages/HomePage";
 import SearchResults from "./components/search/SearchResults"; // Updated import path
-import OrderRequest from "./pages/OrderRequestPage";
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AboutUs from "./pages/AboutUs";
-import OrderRequestPage from "./pages/OrderRequestPage";
 import BeAVendorPage from "./pages/BeAVendorPage";
 import ContactPage from "./pages/ContactPage";
 import FAQPage from "./pages/FAQPage";
@@ -29,13 +27,14 @@ import VendorRequestsPage from "./pages/vendor/RequestsPage";
 import VendorSettingsPage from "./pages/vendor/SettingsPage";
 import ImageSearchResults from "./components/ImageSearchResults"; // Updated import path
 import TextSearchResults from './components/TextSearchResults';
-
+import CustomerDashboard from "./pages/customer/CustomerDashboard"; // Updated import path
 
 // New Component for Image Upload
 import ImageUploadForm from './components/ImageUploadForm';
-import Profile from "./components/dashboard/Profile";
 // New: ProtectedRoute
 import ProtectedRoute from "./components/ProtectedRoute"; 
+import ProductDetailsPage from "./pages/ProductDetailsPage";
+import OrderForm from "./components/order/OrderForm";
 
 function App() {
   return (
@@ -52,18 +51,18 @@ function App() {
                 <Route path="/search-results" element={<SearchResults />} />
                 <Route path="/search" element={<ImageSearchResults />} />
                 <Route path="/search-keyword" element={<TextSearchResults />} />
-                <Route path="/order" element={<OrderRequest />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/about" element={<AboutUs />} />
-                <Route path="/order-request/:id" element={<OrderRequestPage />} />
+                <Route path="/order-request/:id" element={<OrderForm />} />
                 <Route path="/be-a-vendor" element={<BeAVendorPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/upload-image" element={<ImageUploadForm />} />
-                <Route path="/CustomerDashboard" element={<Profile />} />
+                <Route path="/customer/dashboard" element={<CustomerDashboard />} />
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+                <Route path="product/:id" element={<ProductDetailsPage />} />
 
                 {/* Admin Panel */}
                 <Route path="/admin" element={<AdminPanel />} />
