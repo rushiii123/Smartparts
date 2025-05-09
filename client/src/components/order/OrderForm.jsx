@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, LoaderCircle } from 'lucide-react';
-import Button from '../shared/Button'; // Ensure the correct path for Button
+import Button from '../shared/Button';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'react-toastify';
 
 export default function OrderForm({ onSubmit }) {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
-  const [vendor, setVendor] = useState(null); // To store vendor data
+  const [vendor, setVendor] = useState(null);
   const [formData, setFormData] = useState({
     quantity: 1,
     pickupDate: '',
@@ -17,15 +18,16 @@ export default function OrderForm({ onSubmit }) {
     notes: ''
   });
   const [loading, setLoading] = useState(false);
-  const [customerId, setCustomerId] = useState(null); // Declare customerId state
+  const [customerId, setCustomerId] = useState(null);
+  const [countdown, setCountdown] = useState(5); // Countdown timer (in seconds)
+  const [toastId, setToastId] = useState(null); // Track the toast ID for dismissal
 
-  // This effect will handle token validation and redirection
+  // Check if user is logged in by verifying the token
   useEffect(() => {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      alert('You need to be logged in!');
-      navigate('/login');  // Redirect to login page
+      navigate('/login');
       return;
     }
 
@@ -34,21 +36,19 @@ export default function OrderForm({ onSubmit }) {
       const decoded = jwtDecode(token);
       setCustomerId(decoded?.userId || decoded?._id);
     } catch (err) {
-      alert('Invalid token.');
-      navigate('/login'); // Navigate to login page if token is invalid
+      toast.error('Invalid token. Please log in again.');
+      navigate('/login');
     }
 
     const fetchProduct = async () => {
       try {
-        // Fetch the product data
         const productRes = await fetch(`http://localhost:5000/api/products/${id}`);
         const productData = await productRes.json();
-        setProduct(productData.product); // Assuming the product data is in `product`
+        setProduct(productData.product);
 
-        // After getting product, fetch the vendor details using vendorId
         const vendorRes = await fetch(`http://localhost:5000/api/vendor/${productData.product.vendorId}`);
         const vendorData = await vendorRes.json();
-        setVendor(vendorData.vendor); // Set vendor data
+        setVendor(vendorData.vendor);
 
       } catch (err) {
         console.error("Error fetching product or vendor:", err);
@@ -56,7 +56,7 @@ export default function OrderForm({ onSubmit }) {
     };
 
     fetchProduct();
-  }, [id, navigate]); // Only fetch the product if `id` changes
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,32 +66,30 @@ export default function OrderForm({ onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if the quantity is greater than 0 and less than or equal to the available stock
     if (formData.quantity <= 0) {
       alert("Quantity cannot be zero or negative. Please enter a valid quantity.");
-      return; // Prevent form submission
+      return;
     }
 
     if (formData.quantity > product.quantity) {
       alert(`The quantity you entered exceeds the available stock (${product.quantity}). Please reduce the quantity.`);
-      return; // Prevent form submission
+      return;
     }
 
-    // Validate pickup date and time
     if (!formData.pickupDate) {
       alert("Please select a pickup date.");
-      return; // Prevent form submission
+      return;
     }
 
     if (!formData.pickupTime) {
       alert("Please select a pickup time.");
-      return; // Prevent form submission
+      return;
     }
 
     if (!customerId) {
       alert('Please login to place an order.');
-      navigate('/login'); // Navigate to login page if no customerId
-      return; // Stop further execution of the function
+      navigate('/login');
+      return;
     }
 
     const orderPayload = {
@@ -107,15 +105,12 @@ export default function OrderForm({ onSubmit }) {
     try {
       setLoading(true);
 
-      console.log('Order Payload:', orderPayload); // Debugging line
-
       const token = localStorage.getItem('token');
-
       const res = await fetch('http://localhost:5000/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Send the token in the Authorization header
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(orderPayload)
       });
@@ -124,8 +119,45 @@ export default function OrderForm({ onSubmit }) {
       setLoading(false);
 
       if (res.ok) {
-        // Navigate to order history page upon successful order placement
-        navigate('/order/history');
+        // Display success toast in the middle of the screen
+        const id = toast.success(
+          <div className="flex justify-between items-center">
+            <div className="flex-grow">Order placed successfully!</div>
+            <button
+              onClick={() => {
+                toast.dismiss(id);  // Dismiss the toast when clicked
+                navigate('/order/history'); // Navigate immediately after clicking OK
+              }}
+              className="ml-4 p-2 bg-green-500 text-white rounded-md hover:bg-green-700"
+            >
+              OK
+            </button>
+          </div>,
+          {
+            position: "top-center",  // Position in the middle (top-center)
+            autoClose: false,        // Prevent auto-close
+            hideProgressBar: true,   // Hide the progress bar
+            closeOnClick: false,     // Disable closing the toast by clicking anywhere
+            closeButton: false,      // Hide the close (X) button
+            style: {
+              marginTop: '100px',    // Adjust to position the toast slightly down
+              padding: '20px',       // Padding for the toast to make room for the button
+              position: 'relative',  // Ensure the button is positioned relative to the toast
+            }
+          }
+        );
+        setToastId(id); // Store the toast ID to dismiss it later
+
+        // Start countdown to navigate to the order history page
+        const interval = setInterval(() => {
+          setCountdown((prev) => prev - 1);
+        }, 1000);
+
+        setTimeout(() => {
+          clearInterval(interval);
+          toast.dismiss(id); // Dismiss the toast
+          navigate('/order/history'); // Redirect to order history page after countdown
+        }, 5000); // 5 seconds countdown
       } else {
         alert(data.message || 'Order failed');
       }

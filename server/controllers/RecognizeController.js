@@ -14,7 +14,6 @@ export const recognizeImage = async (req, res) => {
 
     // Extract keywords using Vision API
     const { keywords, raw } = await analyzeImageAndExtractKeywords(imageUrl);
-    console.log('Extracted keywords:', keywords);
 
     // Fetch all products (for custom filtering)
     const allProducts = await Product.find();

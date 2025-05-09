@@ -50,7 +50,7 @@ export default function Header() {
   };
 
   return (
-    <header 
+    <header
       className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' : 'bg-transparent text-blue-900'}`}
     >
       <div className="container mx-auto px-4 py-4">
@@ -61,7 +61,7 @@ export default function Header() {
               SmartParts
             </span>
           </Link>
-          
+
           <div className="hidden md:flex items-center space-x-8">
             <nav className="text-white">
               <ul className="flex space-x-8">
@@ -87,7 +87,7 @@ export default function Header() {
                 </li>
               </ul>
             </nav>
-            
+
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
@@ -96,14 +96,13 @@ export default function Header() {
                       Dashboard
                     </Link>
                   )}
-                  <Link 
-                    to="/customer/dashboard" 
-                    className="p-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                  >
-                    <User size={20} />
-                  </Link>
-                  <button 
-                    onClick={handleLogout} 
+                  {role === 'customer' && (
+                    <Link to="/customer/dashboard" className="font-semibold text-white hover:text-blue-200 transition-colors">
+                      Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={handleLogout}
                     className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
                   >
                     Logout
@@ -111,14 +110,14 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                   >
                     Login
                   </Link>
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                   >
                     Register
@@ -126,9 +125,10 @@ export default function Header() {
                 </>
               )}
             </div>
+
           </div>
-          
-          <button 
+
+          <button
             className="md:hidden text-white"
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -136,7 +136,7 @@ export default function Header() {
           </button>
         </div>
       </div>
-      
+
       {/* Mobile menu */}
       {isOpen && (
         <div className="md:hidden bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
@@ -174,8 +174,8 @@ export default function Header() {
                     <Link to="/profile" className="block py-2 font-semibold text-white hover:text-blue-200 transition-colors">
                       My Profile
                     </Link>
-                    <button 
-                      onClick={handleLogout} 
+                    <button
+                      onClick={handleLogout}
                       className="block py-2 font-semibold text-white hover:text-blue-200 transition-colors"
                     >
                       Logout
@@ -183,14 +183,14 @@ export default function Header() {
                   </>
                 ) : (
                   <div className="flex flex-col space-y-2">
-                    <Link 
-                      to="/login" 
+                    <Link
+                      to="/login"
                       className="px-4 py-2 rounded-md border border-blue-600 text-blue-600 text-center hover:bg-blue-50 transition-colors"
                     >
                       Login
                     </Link>
-                    <Link 
-                      to="/register" 
+                    <Link
+                      to="/register"
                       className="px-4 py-2 rounded-md bg-blue-600 text-white text-center hover:bg-blue-700 transition-colors"
                     >
                       Register

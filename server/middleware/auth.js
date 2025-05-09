@@ -1,7 +1,6 @@
-// middleware/auth.js
 import jwt from 'jsonwebtoken';
 
-export function protect(role) {
+export function protect(roles) {
   return (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', ''); // Extract token from header
 
@@ -14,9 +13,12 @@ export function protect(role) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded; // Attach the user info to the request
 
-      // If a role is specified, ensure the user has the correct role
-      if (role && req.user.role !== role) {
-        return res.status(403).json({ message: 'Access denied' }); // Denied access if the roles don't match
+      // If roles are specified, ensure the user has one of the allowed roles
+      if (roles) {
+        const allowedRoles = roles.split(','); // Split roles into an array
+        if (!allowedRoles.includes(req.user.role)) {
+          return res.status(403).json({ message: 'Access denied' }); // Denied access if the role doesn't match
+        }
       }
 
       next(); // Proceed to the next middleware or route handler

@@ -64,9 +64,7 @@ export default function VendorDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
             <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>
           </div>
-          <Link to="/vendor/add-product">
-            <Button variant="primary">Add New Product</Button>
-          </Link>
+
         </div>
 
         {/* Stats Grid */}
@@ -117,7 +115,7 @@ export default function VendorDashboard() {
               <Link to="/order/history" className="block">
                 <Button variant="outline" fullWidth>View Orders</Button>
               </Link>
-                          </div>
+            </div>
           </div>
         </div>
       </div>

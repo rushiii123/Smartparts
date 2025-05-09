@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Image as ImageIcon } from 'lucide-react';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import Button from '../../components/shared/Button';
+import { toast } from 'react-toastify'; // Import toast for success messages
+
 
 export default function VendorAddProductPage() {
   const [loading, setLoading] = useState(false);
@@ -23,17 +25,30 @@ export default function VendorAddProductPage() {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    setImages(prev => [...prev, ...files]);
+    setImages((prev) => [...prev, ...files]);
   };
 
   const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // START loading
-  
+    setLoading(true); // Start loading
+
+    // Input validation
+    if (!formData.name || !formData.partNumber || !formData.category || !formData.price || !formData.quantity || !formData.description) {
+      alert('Please fill in all required fields.');
+      setLoading(false); // Stop loading
+      return;
+    }
+
+    if (formData.price < 0 || formData.quantity < 0) {
+      alert('Price and quantity cannot be negative.');
+      setLoading(false); // Stop loading
+      return;
+    }
+
     const token = localStorage.getItem('token');
     let vendorId = '';
     if (token) {
@@ -42,11 +57,11 @@ export default function VendorAddProductPage() {
         vendorId = decoded?.userId || decoded?._id || '';
       } catch (err) {
         console.error('Invalid token', err);
-        setLoading(false); // STOP loading
+        setLoading(false); // Stop loading
         return;
       }
     }
-  
+
     const form = new FormData();
     form.append('name', formData.name);
     form.append('partNumber', formData.partNumber);
@@ -58,35 +73,50 @@ export default function VendorAddProductPage() {
     form.append('specifications', formData.specifications);
     form.append('compatibility', formData.compatibility);
     form.append('vendorId', vendorId);
-  
+
     images.forEach((file) => {
       form.append('images', file);
     });
-  
+
     try {
       const res = await fetch('http://localhost:5000/api/products/vendor', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`, // Add Authorization header
+        },
         body: form,
       });
-  
+
       const data = await res.json();
-      setLoading(false); // STOP loading
-  
+      setLoading(false); // Stop loading
+
       if (res.ok) {
-        navigate('/vendor/listings');
+        // Show a success message using react-toastify
+        toast.success('Product added successfully!', {
+          position: "top-center",  // Show toast at the top center
+          autoClose: 3000,  // Show the toast for 3 seconds
+          hideProgressBar: true,  // Hide progress bar
+          closeOnClick: false,  // Do not close the toast when clicked
+          closeButton: false,  // Hide close button
+          style: {
+            marginTop: '100px',    // Adjust to position the toast slightly down
+            padding: '20px',       // Padding for the toast to make room for the button
+            position: 'relative',  // Ensure the button is positioned relative to the toast
+          }, onClose: () => navigate('/vendor/listings'), // Navigate to listings when the toast is closed
+        });
       } else {
         console.error('Upload failed:', data.message);
+        alert('Product addition failed. Please try again.');
       }
     } catch (err) {
       console.error('Submit error:', err);
-      setLoading(false); // STOP loading
+      setLoading(false); // Stop loading
+      alert('Something went wrong, please try again later.');
     }
   };
-  
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (

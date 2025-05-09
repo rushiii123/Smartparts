@@ -22,6 +22,7 @@ export default function LoginPage() {
 
     try {
       const { user, token } = await loginUser(email, password);
+      localStorage.removeItem('token');
       localStorage.setItem('token', token);
       login(user.role);
       setSuccess('Successfully logged in!');
@@ -30,7 +31,7 @@ export default function LoginPage() {
           navigate('/vendor/dashboard');
         } else if (user.role === 'customer') {
           navigate('/customer/dashboard');
-        }else {
+        } else {
           navigate('/');
         }
       }, 1500);

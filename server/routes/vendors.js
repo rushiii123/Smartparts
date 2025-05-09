@@ -1,6 +1,7 @@
 // routes/vendors.js
 import express from 'express';
 import Vendor from '../models/Vendor.js'; // Ensure this is the path to your Vendor model
+import { protect } from '../middleware/auth.js';
 const router = express.Router();
 
 
@@ -26,7 +27,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all vendors
-router.get('/', async (req, res) => {
+router.get('/',protect('endor'), async (req, res) => {
   try {
     const vendors = await Vendor.find();
     res.status(200).json(vendors);  // Send all vendors as response

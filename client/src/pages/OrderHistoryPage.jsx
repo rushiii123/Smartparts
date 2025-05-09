@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';  // Use useNavigate hook
 
-import { Edit, Trash2, Search, Plus } from 'lucide-react'; // Icon imports
+import { Search, } from 'lucide-react'; // Icon imports
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 

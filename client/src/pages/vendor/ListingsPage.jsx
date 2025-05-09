@@ -1,25 +1,87 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Package, DollarSign, ShoppingCart, Eye } from 'lucide-react';
 import { Edit, Trash2, Search, Plus } from 'lucide-react';
+
 import Button from '../../components/shared/Button';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const stats = [
+  {
+    label: 'Active Listings',
+    value: '47',
+    change: '+12%',
+    trend: 'up',
+    icon: Package,
+  },
+  {
+    label: 'Total Sales',
+    value: '$12,426',
+    change: '+18.2%',
+    trend: 'up',
+    icon: DollarSign,
+  },
+  {
+    label: 'Pending Requests',
+    value: '8',
+    change: '-2',
+    trend: 'down',
+    icon: ShoppingCart,
+  },
+  {
+    label: 'Profile Views',
+    value: '1,245',
+    change: '+24%',
+    trend: 'up',
+    icon: Eye,
+  },
+];
+
+const recentActivity = [
+  {
+    type: 'request',
+    title: 'New order request',
+    description: 'Brake Pads - Honda Civic 2018',
+    time: '2 minutes ago',
+  },
+  {
+    type: 'listing',
+    title: 'Product listed',
+    description: 'Alternator - Toyota Camry 2015',
+    time: '1 hour ago',
+  },
+  {
+    type: 'sale',
+    title: 'Order completed',
+    description: 'Water Pump - BMW 3 Series',
+    time: '3 hours ago',
+  },
+];
 
 export default function VendorListingsPage() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCondition, setSelectedCondition] = useState('all');
+  const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   const decoded = token ? jwtDecode(token) : null;
   const vendorId = decoded?.userId;
 
   useEffect(() => {
+    if (!token) {
+      navigate('/login'); // Redirect to login if no token
+      return;
+    }
+
+    // Fetch vendor products after token validation
     async function fetchVendorProducts() {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/vendor/${vendorId}`);
+        const res = await axios.get(`http://localhost:5000/api/products/vendor/${vendorId}`, {
+          headers: { Authorization: `Bearer ${token}` }, // Include token in the request
+        });
         const enriched = res.data.products.map(p => ({
           ...p,
           views: 245, // Temporary mock
@@ -33,7 +95,7 @@ export default function VendorListingsPage() {
     }
 
     fetchVendorProducts();
-  }, [vendorId]);
+  }, [vendorId, token, navigate]);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

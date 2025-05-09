@@ -1,5 +1,6 @@
 import express from 'express';
 import Customer from '../models/Customer.js';  // Import the Customer model
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.post('/', async (req, res) => {
 // @desc    Get all customers
 // @route   GET /api/customers
 // @access  Public
-router.get('/', async (req, res) => {
+router.get('/',protect('customer'), async (req, res) => {
   try {
     const customers = await Customer.find();
     res.json({ customers });

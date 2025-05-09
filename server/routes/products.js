@@ -3,6 +3,8 @@ const router = express.Router();
 import Product from '../models/Product.js';
 import upload from '../middleware/uploadMiddleware.js'; 
 import { analyzeImageAndExtractKeywords } from '../config/vision.js';
+import { protect } from '../middleware/auth.js';  // Import the protect middleware
+
 
 
 // @desc    Fetch all products with search capability
@@ -31,7 +33,8 @@ router.get('/', async (req, res) => {
 // @desc    Create a new product
 // @route   POST /api/products
 // @access  Private (vendor only)
-router.post('/', async (req, res) => {
+
+router.post('/',protect('vendor'), async (req, res) => {
   try {
     const {
       name,
@@ -74,7 +77,7 @@ router.post('/', async (req, res) => {
 // @desc    Add new product with vision + cloudinary
 // @route   POST /api/products
 // @access  Private (vendor only)
-router.post('/vendor', upload.array('images', 4), async (req, res) => {
+router.post('/vendor' , protect('vendor'), upload.array('images', 4), async (req, res) => {
   try {
     const {
       name,
@@ -94,14 +97,14 @@ router.post('/vendor', upload.array('images', 4), async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // ⬆️ 1. Upload images already done via Multer + Cloudinary middleware
+    //  1. Upload images already done via Multer + Cloudinary middleware
     const uploadedImages = req.files.map((file) => file.path);
     const mainImage = uploadedImages[0];
 
-    // 🔍 2. Analyze image with Vision API to extract keywords
+    //  2. Analyze image with Vision API to extract keywords
     const { keywords } = await analyzeImageAndExtractKeywords(mainImage);
 
-    // 🧱 3. Construct the product object
+    //  3. Construct the product object
     const product = new Product({
       name,
       partNumber,
@@ -118,7 +121,7 @@ router.post('/vendor', upload.array('images', 4), async (req, res) => {
       tags: keywords || [],
     });
 
-    // 💾 4. Save to DB
+    //  4. Save to DB
     const createdProduct = await product.save();
     res.status(201).json(createdProduct);
 
@@ -131,7 +134,7 @@ router.post('/vendor', upload.array('images', 4), async (req, res) => {
 // @desc    Get all products for a specific vendor
 // @route   GET /api/products/vendor/:vendorId
 // @access  Private (vendor only)
-router.get('/vendor/:vendorId', async (req, res) => {
+router.get('/vendor/:vendorId', protect('vendor'),async (req, res) => {
   try {
     const vendorId = req.params.vendorId;
 

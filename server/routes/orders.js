@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Get user's orders
 router.post(
-  '/',
+  '/',protect('customer','vendor'),
   [
     // You can keep authentication here if needed
     // auth, // Uncomment this if you still want to keep authentication
@@ -86,7 +86,6 @@ router.put('/:id/status', protect('vendor'), async (req, res) => {
     }
 
     order.status = status;
-    console.log(order); // Log order before saving
     await order.save();
 
     res.json(order); // Respond with the updated order
@@ -102,7 +101,7 @@ router.put('/:id/status', protect('vendor'), async (req, res) => {
 
 // Get customer's order history
 router.get(
-  '/history/customer/:customerId',
+  '/history/customer/:customerId', protect('customer'),
   // [auth],
   async (req, res) => {
     try {
@@ -124,7 +123,7 @@ router.get(
 
 // Get vendor's orders
 router.get(
-  '/history/vendor/:vendorId',
+  '/history/vendor/:vendorId',protect('vendor'),
   // [auth, vendorAuth],
   async (req, res) => {
     try {
