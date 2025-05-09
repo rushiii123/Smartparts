@@ -93,7 +93,7 @@ export default function BeAVendorPage() {
           <Button
             variant="primary"
             size="lg"
-            onClick={() => window.location.href = '/register'}
+            onClick={() => window.location.href = '#/register'}
           >
             Start Selling Today
           </Button>
@@ -170,7 +170,7 @@ export default function BeAVendorPage() {
                 <Button
                   variant={tier.recommended ? 'primary' : 'outline'}
                   fullWidth
-                  onClick={() => window.location.href = '/register'}
+                  onClick={() => window.location.href = '#/register'}
                 >
                   Get Started
                 </Button>
@@ -191,14 +191,14 @@ export default function BeAVendorPage() {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => window.location.href = '/register'}
+              onClick={() => window.location.href = '#/register'}
             >
               Create Vendor Account
             </Button>
             <Button
               variant="outline"
               size="lg"
-              onClick={() => window.location.href = '/contact'}
+              onClick={() => window.location.href = '#/contact'}
             >
               Contact Sales
             </Button>

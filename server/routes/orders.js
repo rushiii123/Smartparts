@@ -1,8 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import OrderRequest from '../models/OrderRequest.js';
-import { protect as auth } from '../middleware/auth.js';
-import vendorAuth from '../middleware/vendorAuth.js';
+import { protect } from '../middleware/auth.js';  // Import the protect middleware
 import mongoose from 'mongoose'; // Ensure mongoose is imported
 
 const router = express.Router();
@@ -63,33 +62,85 @@ router.post(
 );
 
 // Update order status (vendor only)
-router.put(
-  '/:id/status',
-  [auth, vendorAuth],
+router.put('/:id/status', protect('vendor'), async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+    if (status && ['Pending', 'Accepted', 'Completed'].includes(status)) {
+      // Continue with the code when the status is valid
+    } else {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+
+    const order = await OrderRequest.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (order.vendorId.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    order.status = status;
+    console.log(order); // Log order before saving
+    await order.save();
+
+    res.json(order); // Respond with the updated order
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
+
+// Get customer's order history
+router.get(
+  '/history/customer/:customerId',
+  // [auth],
   async (req, res) => {
     try {
-      const { status } = req.body;
-      if (!['pending', 'accepted', 'rejected', 'completed'].includes(status)) {
-        return res.status(400).json({ message: 'Invalid status' });
+      const customerId = req.params.customerId;
+
+      // Fetch the orders for the given customer
+      const orders = await OrderRequest.find({ customerId }).populate('productId vendorId');
+      if (!orders) {
+        return res.status(404).json({ message: 'No orders found for this customer' });
       }
 
-      const order = await OrderRequest.findById(req.params.id);
-      if (!order) {
-        return res.status(404).json({ message: 'Order not found' });
-      }
-
-      if (order.vendorId.toString() !== req.user.userId) {
-        return res.status(403).json({ message: 'Not authorized' });
-      }
-
-      order.status = status;
-      await order.save();
-
-      res.json(order);
+      res.json(orders);
     } catch (err) {
+      console.error(err);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
 
+// Get vendor's orders
+router.get(
+  '/history/vendor/:vendorId',
+  // [auth, vendorAuth],
+  async (req, res) => {
+    try {
+      const vendorId = req.params.vendorId;
+
+      // Fetch orders for a given vendor, where vendorId matches
+      const orders = await OrderRequest.find({ vendorId }).populate('productId customerId');
+      if (!orders) {
+        return res.status(404).json({ message: 'No orders found for this vendor' });
+      }
+
+      res.json(orders);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
 export default router;

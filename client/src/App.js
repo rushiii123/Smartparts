@@ -35,6 +35,7 @@ import ImageUploadForm from './components/ImageUploadForm';
 import ProtectedRoute from "./components/ProtectedRoute"; 
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import OrderForm from "./components/order/OrderForm";
+import OrderHistoryPage from "./pages/OrderHistoryPage";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
                 <Route path="/customer/dashboard" element={<CustomerDashboard />} />
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                 <Route path="product/:id" element={<ProductDetailsPage />} />
+                <Route path="/order/history" element={<OrderHistoryPage />} />
 
                 {/* Admin Panel */}
                 <Route path="/admin" element={<AdminPanel />} />

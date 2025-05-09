@@ -1,17 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 import { Menu, X, User } from 'lucide-react';
-import { useUser } from '../../context/UserContext';
+import { useLocation } from 'react-router-dom';  // Import useLocation
+import { jwtDecode } from 'jwt-decode';  // Correct import for jwt-decode
+
 import Logo from '../shared/Logo';
-import Button from '../shared/Button'; 
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isAuthenticated, role } = useUser();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);  // State for authentication
+  const [role, setRole] = useState(null); // State for user role
   const location = useLocation();
+  const navigate = useNavigate();  // For navigation after logout
 
+  // Check if token exists and set authentication and role state
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+      const decoded = jwtDecode(token);  // Decode the token if it exists
+      setRole(decoded?.role);  // Set the role from the decoded token
+    } else {
+      setIsAuthenticated(false);  // No token means user is not authenticated
+    }
+
     const handleScroll = () => {
       if (window.scrollY > 10) {
         setIsScrolled(true);
@@ -22,11 +35,19 @@ export default function Header() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, []); // Empty dependency array ensures this only runs once on mount
 
   useEffect(() => {
     setIsOpen(false);
   }, [location]);
+
+  // Handle logout function
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Remove token from localStorage
+    setIsAuthenticated(false);  // Update isAuthenticated state
+    setRole(null); // Clear the role
+    navigate('/login'); // Redirect to login page after logout
+  };
 
   return (
     <header 
@@ -68,13 +89,6 @@ export default function Header() {
             </nav>
             
             <div className="flex items-center space-x-4">
-              {/* Become a Vendor Button */}
-              <Link to="/be-a-vendor">
-                <Button variant="primary" size="sm" className="hidden md:inline-block">
-                  Become a Vendor
-                </Button>
-              </Link>
-              
               {isAuthenticated ? (
                 <>
                   {role === 'vendor' && (
@@ -83,11 +97,17 @@ export default function Header() {
                     </Link>
                   )}
                   <Link 
-                    to="/CustomerDashboard" 
+                    to="/customer/dashboard" 
                     className="p-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                   >
                     <User size={20} />
                   </Link>
+                  <button 
+                    onClick={handleLogout} 
+                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  >
+                    Logout
+                  </button>
                 </>
               ) : (
                 <>
@@ -143,15 +163,6 @@ export default function Header() {
                 </Link>
               </li>
 
-              {/* Mobile Become a Vendor Button */}
-              <div className="pt-4 border-t border-white">
-                <Link to="/be-a-vendor">
-                  <Button variant="primary" size="sm" fullWidth>
-                    Become a Vendor
-                  </Button>
-                </Link>
-              </div>
-
               <div className="pt-4 border-t border-white">
                 {isAuthenticated ? (
                   <>
@@ -163,6 +174,12 @@ export default function Header() {
                     <Link to="/profile" className="block py-2 font-semibold text-white hover:text-blue-200 transition-colors">
                       My Profile
                     </Link>
+                    <button 
+                      onClick={handleLogout} 
+                      className="block py-2 font-semibold text-white hover:text-blue-200 transition-colors"
+                    >
+                      Logout
+                    </button>
                   </>
                 ) : (
                   <div className="flex flex-col space-y-2">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, LoaderCircle } from 'lucide-react';
-import Button from '../shared/Button';
+import Button from '../shared/Button'; // Ensure the correct path for Button
 import { jwtDecode } from 'jwt-decode';
 
 export default function OrderForm({ onSubmit }) {
@@ -17,6 +17,7 @@ export default function OrderForm({ onSubmit }) {
     notes: ''
   });
   const [loading, setLoading] = useState(false);
+  const [customerId, setCustomerId] = useState(null); // Declare customerId state
 
   // This effect will handle token validation and redirection
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function OrderForm({ onSubmit }) {
       alert('You need to be logged in!');
       navigate('/login');  // Redirect to login page
       return;
+    }
+
+    // Decode the token and set customerId
+    try {
+      const decoded = jwtDecode(token);
+      setCustomerId(decoded?.userId || decoded?._id);
+    } catch (err) {
+      alert('Invalid token.');
+      navigate('/login'); // Navigate to login page if token is invalid
     }
 
     const fetchProduct = async () => {
@@ -78,15 +88,10 @@ export default function OrderForm({ onSubmit }) {
       return; // Prevent form submission
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) return alert('Please login to place an order.');
-
-    let customerId;
-    try {
-      const decoded = jwtDecode(token);
-      customerId = decoded?.userId || decoded?._id;
-    } catch (err) {
-      return alert('Invalid token.');
+    if (!customerId) {
+      alert('Please login to place an order.');
+      navigate('/login'); // Navigate to login page if no customerId
+      return; // Stop further execution of the function
     }
 
     const orderPayload = {
@@ -103,7 +108,9 @@ export default function OrderForm({ onSubmit }) {
       setLoading(true);
 
       console.log('Order Payload:', orderPayload); // Debugging line
-      
+
+      const token = localStorage.getItem('token');
+
       const res = await fetch('http://localhost:5000/api/orders', {
         method: 'POST',
         headers: {

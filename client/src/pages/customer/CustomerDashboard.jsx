@@ -1,52 +1,123 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Package, DollarSign, ShoppingCart, Eye } from 'lucide-react';
+import Button from '../../components/shared/Button';
 
-const CustomerDashboard = () => {
-  const navigate = useNavigate();
+const stats = [
+  {
+    label: 'Total Orders',
+    value: '10',
+    change: '+12%',
+    trend: 'up',
+    icon: Package,
+  },
+  {
+    label: 'Pending Orders',
+    value: '2',
+    change: '-2',
+    trend: 'down',
+    icon: ShoppingCart,
+  },
+  {
+    label: 'Total Spend',
+    value: '$500',
+    change: '+18.2%',
+    trend: 'up',
+    icon: DollarSign,
+  },
+  {
+    label: 'Profile Views',
+    value: '1,245',
+    change: '+24%',
+    trend: 'up',
+    icon: Eye,
+  },
+];
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+const recentActivity = [
+  {
+    type: 'request',
+    title: 'New order placed',
+    description: 'Brake Pads - Honda Civic 2018',
+    time: '2 minutes ago',
+  },
+  {
+    type: 'listing',
+    title: 'Product viewed',
+    description: 'BMW 3 Series - Engine',
+    time: '10 minutes ago',
+  },
+  {
+    type: 'sale',
+    title: 'Order completed',
+    description: 'Water Pump - BMW 3 Series',
+    time: '1 hour ago',
+  },
+];
 
+export default function CustomerDashboard() {
   return (
-    <div>
-      <div className="flex justify-between items-center p-4 bg-blue-500 text-white">
-        <h1 className="text-xl font-bold">Customer Dashboard</h1>
-        <button onClick={handleLogout} className="bg-white text-blue-500 px-4 py-2 rounded">Logout</button>
-      </div>
-
-      <div className="flex">
-        <div className="w-64 bg-gray-100 min-h-screen p-4">
-          <div className="mb-2 cursor-pointer" onClick={() => navigate('/profile')}>Profile</div>
-          <div className="mb-2 cursor-pointer" onClick={() => navigate('/orders')}>Orders</div>
-          <div className="mb-2 cursor-pointer" onClick={() => navigate('/settings')}>Settings</div>
+    <div className="bg-gray-50 min-h-screen pt-24">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Customer Dashboard</h1>
+            <p className="text-gray-600">Welcome back! Here's a summary of your activity.</p>
+          </div>
         </div>
 
-        <main className="flex-1 p-6">
-          <h2 className="text-2xl font-semibold mb-4">Welcome back, [User Name]!</h2>
-          <p className="text-lg text-gray-700 mb-6">
-            Here’s a summary of your activity.
-          </p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat) => (
+            <div key={stat.label} className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                {React.createElement(stat.icon, { className: "w-8 h-8 text-blue-600" })}
+                <span className={`text-sm font-medium ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                  {stat.change}
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</h3>
+              <p className="text-gray-600">{stat.label}</p>
+            </div>
+          ))}
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-xl mb-2">Total Orders</h3>
-              <p className="text-lg font-bold">10</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-xl mb-2">Pending Orders</h3>
-              <p className="text-lg font-bold">2</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-xl mb-2">Total Spend</h3>
-              <p className="text-lg font-bold">$500</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
+              <div className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-start border-b border-gray-100 last:border-0 pb-4 last:pb-0">
+                    <div className="flex-grow">
+                      <h3 className="text-sm font-medium text-gray-900">{activity.title}</h3>
+                      <p className="text-sm text-gray-600">{activity.description}</p>
+                      <span className="text-xs text-gray-500">{activity.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </main>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+            <div className="space-y-3">
+              <Link to="/" className="block">
+                <Button variant="outline" fullWidth>Buy Product</Button>
+              </Link>
+              <Link to="/order/history" className="block">
+                <Button variant="outline" fullWidth>View Orders</Button>
+              </Link>
+              <Link to="/profile" className="block">
+                <Button variant="outline" fullWidth>View Profile</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-};
-
-export default CustomerDashboard;
+}

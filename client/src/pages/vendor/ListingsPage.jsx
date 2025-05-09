@@ -13,10 +13,8 @@ export default function VendorListingsPage() {
   const [selectedCondition, setSelectedCondition] = useState('all');
 
   const token = localStorage.getItem('token');
-  console.log(token); // should give you the token
   const decoded = token ? jwtDecode(token) : null;
   const vendorId = decoded?.userId;
-  console.log('Vendor ID:', vendorId);
 
   useEffect(() => {
     async function fetchVendorProducts() {

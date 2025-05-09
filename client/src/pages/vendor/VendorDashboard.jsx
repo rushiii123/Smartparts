@@ -114,13 +114,10 @@ export default function VendorDashboard() {
               <Link to="/vendor/listings" className="block">
                 <Button variant="outline" fullWidth>Manage Listings</Button>
               </Link>
-              <Link to="/vendor/requests" className="block">
-                <Button variant="outline" fullWidth>View Requests</Button>
+              <Link to="/order/history" className="block">
+                <Button variant="outline" fullWidth>View Orders</Button>
               </Link>
-              <Link to="/vendor/settings" className="block">
-                <Button variant="outline" fullWidth>Update Settings</Button>
-              </Link>
-            </div>
+                          </div>
           </div>
         </div>
       </div>

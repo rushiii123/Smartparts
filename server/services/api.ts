@@ -61,19 +61,26 @@ export const products = {
 };
 
 export const orders = {
-  getUserOrders: async () => {
-    const response = await api.get('/orders/user');
+  // Get orders for a specific customer (fetches orders by customerId)
+  getUserOrders: async (customerId) => {
+    const response = await api.get(`/orders/history/customer/${customerId}`);
     return response.data;
   },
-  getVendorOrders: async () => {
-    const response = await api.get('/orders/vendor');
+
+  // Get orders for a specific vendor (fetches orders by vendorId)
+  getVendorOrders: async (vendorId) => {
+    const response = await api.get(`/orders/history/vendor/${vendorId}`);
     return response.data;
   },
-  create: async (orderData: any) => {
+
+  // Create a new order
+  create: async (orderData) => {
     const response = await api.post('/orders', orderData);
     return response.data;
   },
-  updateStatus: async (id: string, status: string) => {
+
+  // Update the status of an order (only vendors can update the status)
+  updateStatus: async (id, status) => {
     const response = await api.put(`/orders/${id}/status`, { status });
     return response.data;
   },

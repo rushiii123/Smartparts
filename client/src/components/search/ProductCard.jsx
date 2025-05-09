@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, Phone, ShoppingCart, Star, ExternalLink } from 'lucide-react';
 import Button from '../shared/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function ProductCard({ product }) {
   const [isHovering, setIsHovering] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is logged in by verifying the presence of a token
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsLoggedIn(true); // If token is present, the user is logged in
+    } else {
+      setIsLoggedIn(false); // If no token, the user is not logged in
+    }
+  }, []); // Run once when component mounts
 
   if (!product) return null;
 
@@ -14,6 +26,19 @@ export default function ProductCard({ product }) {
     distance: product?.vendor?.distance || 2.5,
     location: product?.vendor?.location || 'Colombo, Sri Lanka',
     phone: product?.vendor?.phone || '+94 77 123 4567',
+  };
+
+  const isOutOfStock = product.inStock === false || product.quantity <= 0;
+
+  const handleRequestClick = (e) => {
+    if (!isLoggedIn) {
+      // If the user is not logged in, prevent the request and redirect to login
+      e.preventDefault();
+      navigate('/login'); // Redirect to login page
+    } else if (isOutOfStock) {
+      // If the product is out of stock, prevent the request
+      e.preventDefault();
+    }
   };
 
   return (
@@ -28,7 +53,7 @@ export default function ProductCard({ product }) {
           alt={product.name}
           className="w-full h-full object-contain p-4"
         />
-        {product.inStock === false || product.quantity <= 0 ? (
+        {isOutOfStock ? (
           <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1">
             Out of Stock
           </div>
@@ -120,12 +145,18 @@ export default function ProductCard({ product }) {
             </Button>
           </Link>
 
-          <Link to={`/order-request/${product._id || product.id}`} className="flex-1">
+          {/* Prevent navigation if the product is out of stock or user is not logged in */}
+          <Link 
+            to={`/order-request/${product._id || product.id}`} 
+            className="flex-1" 
+            onClick={handleRequestClick}
+          >
             <Button
               variant="primary"
               size="sm"
               icon={<ShoppingCart size={16} />}
               fullWidth
+              disabled={isOutOfStock} // Disable the button if the product is out of stock
             >
               Request
             </Button>

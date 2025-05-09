@@ -34,7 +34,7 @@ const orderRequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Cancelled'],
+    enum: ['Pending', 'Accepted', 'Completed'],  // Enum values with proper casing
     default: 'Pending',
   },
 }, { timestamps: true });
